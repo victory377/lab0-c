@@ -26,7 +26,12 @@ queue_t *q_new()
 {
     queue_t *q = malloc(sizeof(queue_t));
     /* What if malloc returned NULL? */
+    if (!q) {
+        free(q);
+        return NULL;
+    }
     q->head = NULL;
+    q->tail = NULL;
     return q;
 }
 
@@ -35,7 +40,11 @@ void q_free(queue_t *q)
 {
     /* How about freeing the list elements and the strings? */
     /* Free queue structure */
-    free(q);
+    while (q->head) {
+        free(q->head->value);
+        q->head = q->head->next;
+    }
+    free(q->head);
 }
 
 /*
@@ -47,13 +56,36 @@ void q_free(queue_t *q)
  */
 bool q_insert_head(queue_t *q, char *s)
 {
-    list_ele_t *newh;
     /* What should you do if the q is NULL? */
-    newh = malloc(sizeof(list_ele_t));
+    if (!q)
+        return false;
     /* Don't forget to allocate space for the string and copy it */
+    list_ele_t *newh;
+    newh = malloc(sizeof(list_ele_t));
     /* What if either call to malloc returns NULL? */
-    newh->next = q->head;
-    q->head = newh;
+    if (!newh) {
+        free(newh);
+        return false;
+    }
+    newh->value = (char *) malloc(sizeof(char) * strlen(s));
+    if (!newh->value) {
+        free(newh->value);
+        free(newh);
+        return false;
+    }
+    memcpy(newh->value, s, strlen(s) + 1);
+
+    // queue is empty
+    if (q->head == NULL) {
+        newh->next = NULL;
+        q->head = newh;
+        q->tail = newh;
+    }
+    // queue is not empty
+    else {
+        newh->next = q->head;
+        q->head = newh;
+    }
     return true;
 }
 
@@ -69,7 +101,31 @@ bool q_insert_tail(queue_t *q, char *s)
 {
     /* You need to write the complete code for this function */
     /* Remember: It should operate in O(1) time */
-    return false;
+    if (!q)
+        return false;
+
+    list_ele_t *newh;
+    newh = malloc(sizeof(list_ele_t));
+    if (!newh) {
+        free(newh);
+        return false;
+    }
+    newh->value = (char *) malloc(sizeof(char) * strlen(s));
+    if (!newh->value) {
+        free(newh->value);
+        free(newh);
+        return false;
+    }
+    memcpy(newh->value, s, strlen(s) + 1);
+    if (q->head == NULL) {
+        newh->next = NULL;
+        q->head = newh;
+        q->tail = newh;
+    } else {
+        q->tail->next = newh;
+        newh->next = NULL;
+    }
+    return true;
 }
 
 /*
